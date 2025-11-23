@@ -42,6 +42,6 @@ The Pioneer (30-Day personalized tour with private yacht).
 
 HTML5 / CSS3
 
-Styling: Custom CSS/Tailwind for the distinct neon and dark mode theme.
+**Styling:** Custom CSS/Tailwind for the distinct neon and dark mode theme.
 
 Created as a portfolio project to demonstrate mastery of complex, visually demanding user interfaces.

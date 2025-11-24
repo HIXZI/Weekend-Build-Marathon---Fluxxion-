@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmation | Stellaris Travel</title>
+    <title>Expedition Booking | Stellaris Travel</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,40 +19,115 @@
             <p class="description">You are one step closer to The Glimmering World! Please verify your details to secure your berth on the next available solar cycle.</p>
             
             <div class="form-container">
-                <form action="thankyou.html" method="POST">
+                <form id="bookingForm">
                     
                     <label for="name">Full Name</label>
                     <input type="text" id="name" name="fullname" placeholder="John Aethelgard Doe" required>
 
-                    <label for="email">Stellaris ID (Email Address)</label>
+                    <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="explorer@earth.com" required>
 
                     <label for="package">Selected Package</label>
                     <select id="package" name="package">
                         <option value="observer">The Observer (7-Day)</option>
                         <option value="deep-diver">The Deep Diver (14-Day)</option>
-                        <option value="pioneer">The Pioneer (30-Day)</option>
+                        <option option value="pioneer">The Pioneer (30-Day)</option>
                     </select>
 
                     <label for="departure">Preferred Departure Cycle</label>
                     <input 
-                        type="date" 
+                        type="text" 
                         id="departure" 
-                        name="departure" 
-                        placeholder="YYYY-MM-DD" 
+                        name="date" 
+                        placeholder="DD/MM/YYYY" 
                         required
+                        maxlength="10"
+                        pattern="(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}"
+                        title="Date format must be DD/MM/YYYY, with valid month (01-12) and day (01-31)."
                     >
                     
                     <p class="disclaimer">By submitting, you agree to our interstellar privacy policy.</p>
 
-                    <button type="submit" class="cta-button large-cta submit-button">Confirm Berth </button>
+                    <button type="submit" class="cta-button large-cta submit-button">Confirm Berth & Pay</button>
                 </form>
             </div>
         </section>
     </div>
+
     <footer>
         <p>&copy; 2042 Stellaris Travel Corp. | Created By: HIXZI</p>
     </footer>
+    
+    <script>
+        const getMinDateString = () => {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        };
 
+        const dateInput = document.getElementById('departure');
+        dateInput.addEventListener('input', function() {
+            let value = this.value.replace(/[^0-9/]/g, '');
+            
+            if (value.length > 2 && value.charAt(2) !== '/') {
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            }
+            if (value.length > 5 && value.charAt(5) !== '/') {
+                value = value.slice(0, 5) + '/' + value.slice(5);
+            }
+            
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            this.value = value;
+        });
+        
+        const nameInput = document.getElementById('name');
+        
+        nameInput.addEventListener('input', function() {
+            let value = this.value;
+            value = value.toLowerCase();
+            
+            let capitalizedValue = value.split(' ').map(word => {
+                if (word.length > 0) {
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                }
+                return '';
+            }).join(' ');
+
+            this.value = capitalizedValue;
+        });
+        
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            
+            const form = event.target;
+            const rawDate = form.date.value;
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            if (rawDate.length === 10) {
+                const [day, month, year] = rawDate.split('/');
+                const dateForComparison = `${year}-${month}-${day}`;
+                
+                if (dateForComparison < getMinDateString()) {
+                    alert("Departure date cannot be in the past.");
+                    return;
+                }
+            }
+            
+            const name = form.fullname.value;
+            const pkg = form.package.options[form.package.selectedIndex].text;
+            const date = form.date.value;
+            
+            const params = `?name=${encodeURIComponent(name)}&package=${encodeURIComponent(pkg)}&date=${encodeURIComponent(date)}`;
+            window.location.href = `payment.html${params}`;
+        });
+    </script>
 </body>
 </html>

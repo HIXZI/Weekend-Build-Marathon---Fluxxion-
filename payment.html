@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway | Stellaris Travel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <header class="sub-header">
+        <a href="booking.html" class="back-link">← Return to Booking</a>
+        <h2>Secure Payment</h2>
+    </header>
+
+    <div class="content-main">
+        <section id="payment-gateway" class="section page-top" style="text-align: center;">
+            <h2 class="form-title" style="margin-bottom: 20px;">Finalize Your Transaction</h2>
+            <p class="description" style="max-width: 600px; margin: 0 auto 40px;">
+                Your selected package requires final authorization. This is a secure, 
+                interstellar transaction processed by the Aethelgard Banking Collective.
+            </p>
+
+            <div class="form-container" style="max-width: 500px; padding: 40px;">
+                <div id="payment-form-visual"> 
+                    
+                    <label for="card">Payment Card Number</label>
+                    <div class="card-input-group">
+                        <input 
+                            type="text" 
+                            id="card" 
+                            name="card_number" 
+                            placeholder="XXXX XXXX XXXX XXXX" 
+                            required 
+                            maxlength="19"
+                            pattern="[59]\d{3} \d{4} \d{4} \d{4}" 
+                            title="Card must start with 5 (Mastercard) or 9 (Interstellar Card) and be 16 digits."
+                        >
+                        <span id="card-icon" class="card-icon"></span>
+                    </div>
+
+                    <label for="expiry">Expiry Date</label>
+                    <input 
+                        type="text" 
+                        id="expiry" 
+                        name="expiry" 
+                        placeholder="MM/YY" 
+                        required 
+                        maxlength="5"
+                        pattern="(0[1-9]|1[0-2])\/\d{2}"
+                        title="Enter in MM/YY format (e.g., 12/25)"
+                    >
+                    
+                    <label for="security">Security Code (CVC)</label>
+                    <input 
+                        type="text" 
+                        id="security" 
+                        name="security" 
+                        placeholder="123" 
+                        required 
+                        maxlength="3"
+                        pattern="\d{3}"
+                        title="Must be 3 digits"
+                    >
+                    
+                    <p class="disclaimer" id="total-dues">Total Due: Calculating...</p>
+                    
+                    <a id="payment-link" href="#" class="cta-button large-cta submit-button">AUTHORIZE & PAY NOW</a>
+                </div>
+            </div>
+            
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2042 Stellaris Travel Corp. | Created By: HIXZI</p>
+    </footer>
+
+    <script>
+        const packagePrices = {
+            "The Observer (7-Day)": "25,000",
+            "The Deep Diver (14-Day)": "45,000",
+            "The Pioneer (30-Day)": "100,000"
+        };
+        
+        const cardInput = document.getElementById('card');
+        const cardIcon = document.getElementById('card-icon');
+        const paymentLink = document.getElementById('payment-link');
+        const expiryElement = document.getElementById('expiry');
+        const securityElement = document.getElementById('security');
+        const duesDisplay = document.getElementById('total-dues');
+        const originalParams = window.location.search; 
+
+        function displayDynamicDues() {
+            const urlParams = new URLSearchParams(originalParams);
+            const packageName = urlParams.get('package');
+            const price = packagePrices[packageName] || "100,000";
+            
+            if (duesDisplay) {
+                duesDisplay.textContent = `Total Due: ${price} Credits`;
+            }
+        }
+
+        function isExpiryDateValid(expiryValue) {
+            const [inputMonthStr, inputYearStr] = expiryValue.split('/');
+            
+            if (!inputMonthStr || !inputYearStr || inputYearStr.length !== 2) return true; 
+
+            const inputMonth = parseInt(inputMonthStr, 10);
+            const inputYearFull = 2000 + parseInt(inputYearStr, 10);
+
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+
+            if (inputYearFull < currentYear) {
+                return false;
+            }
+            if (inputYearFull === currentYear && inputMonth < currentMonth) {
+                return false;
+            }
+            return true;
+        }
+
+        expiryElement.addEventListener('input', function() {
+            let value = this.value.replace(/\s/g, '').replace(/[^0-9]/g, ''); 
+            let formattedValue = '';
+
+            if (value.length > 4) {
+                value = value.slice(0, 4);
+            }
+
+            if (value.length > 2) {
+                formattedValue = value.slice(0, 2) + '/' + value.slice(2);
+            } else {
+                formattedValue = value;
+            }
+            
+            this.value = formattedValue;
+        });
+
+        document.getElementById('security').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        cardInput.addEventListener('input', function() {
+            let value = this.value.replace(/[^0-9\s]/g, ''); 
+            const prefix = value.charAt(0);
+            
+            let formattedValue = value.replace(/\s/g, '').match(/.{1,4}/g);
+            if (formattedValue) {
+                formattedValue = formattedValue.join(' ');
+            } else {
+                formattedValue = '';
+            }
+            this.value = formattedValue;
+            
+            let cleanValueNoSpace = this.value.replace(/\s/g, '');
+            cardIcon.className = 'card-icon';
+            if (cleanValueNoSpace.startsWith('5')) {
+                cardIcon.classList.add('icon-mastercard');
+            } else if (cleanValueNoSpace.startsWith('9')) {
+                cardIcon.classList.add('icon-interstellar');
+            }
+
+            if (cleanValueNoSpace.length > 0 && prefix !== '5' && prefix !== '9') {
+                cardInput.classList.add('input-error');
+            } else {
+                cardInput.classList.remove('input-error');
+            }
+        });
+
+        paymentLink.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            if (!cardInput.checkValidity()) {
+                cardInput.reportValidity();
+                return; 
+            }
+            if (!expiryElement.checkValidity()) {
+                expiryElement.reportValidity();
+                return;
+            }
+            if (!securityElement.checkValidity()) {
+                securityElement.reportValidity();
+                return;
+            }
+            
+            if (!isExpiryDateValid(expiryElement.value)) {
+                alert("The card has expired. Please enter a valid future expiry date.");
+                expiryElement.reportValidity();
+                return;
+            }
+
+            const cardNumberClean = cardInput.value.replace(/\s/g, '');
+            const cardPrefix = cardNumberClean.charAt(0);
+            
+            const cardType = (cardPrefix === '5') ? 'Mastercard' : 'Interstellar Card';
+            const lastFour = cardNumberClean.slice(-4);
+            
+            const finalParams = `${originalParams}&paymentType=${encodeURIComponent(cardType)}&lastFour=${encodeURIComponent(lastFour)}`;
+            window.location.href = `thankyou.html${finalParams}`;
+        });
+
+        document.addEventListener('DOMContentLoaded', displayDynamicDues);
+    </script>
+</body>
+</html>
